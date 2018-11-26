@@ -26,13 +26,17 @@ def get_data(path: str = 'data.txt'):
     return resultTotal
 
 
+"""Получение и приведение данных к стандартизиированному в бибилиотеке виду"""
 data = get_data()
 bag = {'weight': data['maxWeight'], 'volume': data['maxVolume']}
 items = data['items']
 
+"""Начальные условия"""
 ga = pyeasyga.GeneticAlgorithm(items)
 ga.population_size = 200
 
+""" Фитнес-фукнция определяет насколько жизнеспособна и эволюционно перспективна особь
+    определяется прямой суммой стоимостей входящих в рюкзак вещей"""
 def fitness(individual, data):
     weight, volume, price = 0, 0, 0
     for (selected, item) in zip(individual, data):
@@ -46,24 +50,25 @@ def fitness(individual, data):
     #print("W: " + str(weight) + "; V: " + str(volume) + "; P: " + str(price))
     return price
 
+"""Запуск генетического алгоритма"""
 ga.fitness_function = fitness
 ga.run()
 result = ga.best_individual()
-print(result)
 
+"""Приводим данные к виду, требуемому в тз"""
 resultWeight = 0
 resultVolume = 0
 resultPrice = 0
 resultSum = []
-i=1
 
 for i in range(len(result[1])):
     if result[1][i] > 0:
         resultWeight +=items[i][0]
         resultVolume += items[i][1]
         resultPrice += items[i][2]
+        resultSum.append(i)
 
-print("W: " + str(resultWeight) + "; V: " + str(resultVolume) + "; P: " + str(resultPrice))
-json_file={'weight':resultWeight,'volume':resultVolume,'price':resultPrice,'items':result[1]}
+"""Запись в json и вывод"""
+json_file={'weight': resultWeight, 'volume': resultVolume, 'price': resultPrice, 'items': resultSum}
 with open('results.json', 'w') as outfile:
     json.dump(json_file, outfile, indent=4, ensure_ascii=False)
