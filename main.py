@@ -1,5 +1,6 @@
-from pyeasyga import pyeasyga
 import json
+from ownga import start_ga
+from libga import start_lib_ga
 
 def get_data(path: str = 'data.txt'):
     """Чтение из файла и построчная запись в lines"""
@@ -31,29 +32,9 @@ data = get_data()
 bag = {'weight': data['maxWeight'], 'volume': data['maxVolume']}
 items = data['items']
 
-"""Начальные условия"""
-ga = pyeasyga.GeneticAlgorithm(items)
-ga.population_size = 200
-
-""" Фитнес-фукнция определяет насколько жизнеспособна и эволюционно перспективна особь
-    определяется прямой суммой стоимостей входящих в рюкзак вещей"""
-def fitness(individual, data):
-    weight, volume, price = 0, 0, 0
-    for (selected, item) in zip(individual, data):
-        if selected:
-            weight += item[0]
-            volume += item[1]
-            price += item[2]
-    if weight > bag['weight'] or volume > bag['volume']:
-        price = 0
-
-    #print("W: " + str(weight) + "; V: " + str(volume) + "; P: " + str(price))
-    return price
-
-"""Запуск генетического алгоритма"""
-ga.fitness_function = fitness
-ga.run()
-result = ga.best_individual()
+"""Находим решение с помощью GA"""
+res1 = start_lib_ga()
+res2 = start_ga()
 
 """Приводим данные к виду, требуемому в тз"""
 resultWeight = 0
@@ -61,14 +42,29 @@ resultVolume = 0
 resultPrice = 0
 resultSum = []
 
-for i in range(len(result[1])):
-    if result[1][i] > 0:
+"""Запись в json и вывод"""
+for i in range(len(res1[1])):
+    if res1[1][i] > 0:
         resultWeight +=items[i][0]
         resultVolume += items[i][1]
         resultPrice += items[i][2]
         resultSum.append(i)
+result1={'weight': resultWeight, 'volume': resultVolume, 'price': resultPrice, 'items': resultSum}
 
-"""Запись в json и вывод"""
-json_file={'weight': resultWeight, 'volume': resultVolume, 'price': resultPrice, 'items': resultSum}
+resultWeight = 0
+resultVolume = 0
+resultPrice = 0
+resultSum = []
+
+lst = list(res2.values())[0]
+for i in range(len(lst)):
+    if (lst[i] > 0):
+        resultWeight +=items[i][0]
+        resultVolume += items[i][1]
+        resultPrice += items[i][2]
+        resultSum.append(i)
+result2={'weight': resultWeight, 'volume': resultVolume, 'price': resultPrice, 'items': resultSum}
+
+json_file={1:result1,2:result2}
 with open('results.json', 'w') as outfile:
     json.dump(json_file, outfile, indent=4, ensure_ascii=False)
